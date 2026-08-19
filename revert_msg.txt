@@ -1,0 +1,5 @@
+﻿Reverter mudanças do App.tsx para estado anterior
+
+Restaura src/App.tsx para o conteúdo do commit 9560ca6 ("Novo layout inspirado no mockup"). Reverte edições UX visuais recentes solicitadas para retornar ao estado que você considerou perfeito.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
