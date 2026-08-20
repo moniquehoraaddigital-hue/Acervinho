@@ -1,4 +1,4 @@
-﻿import { useState } from "react"
+﻿import { useState, useRef, useEffect } from "react"
 import acervinhoLogo from "./assets/acervinho-logo-transparent.png"
 
 const quickActions = [
@@ -134,6 +134,68 @@ function BotMascot() {
 export default function App() {
   const [query, setQuery] = useState("")
   const [forceDesktop, setForceDesktop] = useState(true)
+  const [results, setResults] = useState<Array<{ id?: number; title?: string; content?: string; score?: number }>>([])
+  const [assistant, setAssistant] = useState<string>('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  async function handleSend() {
+    // clear pending debounce so manual send takes precedence
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current as any)
+      debounceRef.current = null
+    }
+
+    if (!query.trim()) return
+    setLoading(true)
+    setError(null)
+    try {
+      const backendUrl = (typeof window !== 'undefined' && window.location.hostname === 'localhost') ? 'http://localhost:4000' : ''
+      const res = await fetch(`${backendUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, topK: 5 }),
+      })
+      if (!res.ok) throw new Error(`Busca falhou: ${res.status}`)
+      const data = await res.json()
+      // chat returns { answer, sources }
+      setResults(Array.isArray(data.sources) ? data.sources.map((s:any) => ({ id: s.id, title: s.title, content: s.snippet })) : [])
+      // also set assistant text in a simple way
+      setAssistant(data.answer ?? '')
+    } catch (err: any) {
+      setError(err?.message ?? String(err))
+      setResults([])
+      setAssistant('')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Debounced auto-search as the user types
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current as any)
+      debounceRef.current = null
+    }
+
+    if (!query.trim()) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+
+    debounceRef.current = setTimeout(() => {
+      handleSend()
+    }, 600)
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current as any)
+        debounceRef.current = null
+      }
+    }
+  }, [query])
 
   return (
     <>
@@ -802,13 +864,34 @@ export default function App() {
                 type="text"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSend(); } }}
                 placeholder="Digite sua dúvida ou solicitação..."
                 aria-label="Digite sua dúvida ou solicitação"
               />
-              <button className="composer-button" type="button" aria-label="Enviar mensagem">
+              <button className="composer-button" type="button" aria-label="Enviar mensagem" onClick={handleSend}>
                 <SendIcon />
               </button>
             </div>
+
+            {error && <div className="search-error" style={{ marginTop: 12, color: 'crimson' }}>Erro: {error}</div>}
+            {loading && <div className="search-loading" style={{ marginTop: 12 }}>Procurando...</div>}
+            {assistant && (
+              <div className="assistant-answer" style={{ marginTop: 12, maxWidth: 820, marginLeft: 'auto', marginRight: 'auto', padding: 12, background: '#fff', borderRadius: 8, boxShadow: '0 8px 16px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontWeight: 700, color: '#1b315f', marginBottom: 8 }}>Acervinho</div>
+                <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: '#2b3a74' }}>{assistant}</pre>
+              </div>
+            )}
+
+            {results.length > 0 && (
+              <div className="search-results" style={{ marginTop: 12, maxWidth: 820, marginLeft: 'auto', marginRight: 'auto', padding: 12, background: '#fff', borderRadius: 8, boxShadow: '0 8px 16px rgba(0,0,0,0.06)' }}>
+                {results.map((r, idx) => (
+                  <div key={r.id ?? idx} className="result-item" style={{ padding: '10px 12px', borderBottom: idx < results.length - 1 ? '1px solid #eee' : 'none' }}>
+                    <div className="result-title" style={{ fontWeight: 700, color: '#1b315f' }}>{r.title ?? 'Resultado'}</div>
+                    <div className="result-snippet" style={{ marginTop: 6, color: '#5a6ca1', fontSize: '0.95rem' }}>{r.content ? (r.content.length > 300 ? r.content.slice(0, 300) + '...' : r.content) : ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="tag-row" aria-label="Categorias">
               <div className="tag-item"><span className="tag-icon" style={{ background: "#2f5ef7" }}>J</span> Jira</div>
