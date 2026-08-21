@@ -125,8 +125,8 @@ function SendIcon() {
 
 function BotMascot() {
   return (
-    <div className="mascot-scene" aria-label="Mascote Acervinho">
-      <img src={acervinhoLogo} alt="Mascote Acervinho" className="hero-logo" />
+    <div className="mascot-scene acervinho" aria-label="Mascote Acervinho">
+      <img src={acervinhoLogo} alt="Mascote Acervinho" className="peito" />
     </div>
   )
 }
@@ -409,16 +409,119 @@ export default function App() {
           align-items: center;
           justify-content: center;
           margin: 10px 0 0;
+          isolation: isolate;
         }
 
-        .hero-logo {
+        .mascot-scene::before {
+          content: "";
+          position: absolute;
+          inset: 18% 22% 12%;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(145, 105, 255, 0.26) 0%, rgba(145, 105, 255, 0.08) 34%, transparent 72%);
+          filter: blur(18px);
+          animation: aura 3.4s ease-in-out infinite;
+          z-index: 0;
+        }
+
+        .acervinho {
+          position: relative;
+          z-index: 1;
+          width: min(100%, 240px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: entradaMascote 1.4s cubic-bezier(0.18, 0.75, 0.22, 1) forwards, flutuar 3.6s ease-in-out infinite 1.4s;
+          transform-origin: center;
+          will-change: transform, filter, opacity;
+        }
+
+        .acervinho .peito {
+          position: relative;
+          z-index: 1;
           display: block;
           width: min(100%, 240px);
           height: auto;
           background: transparent;
           border-radius: 0;
           box-shadow: none;
-          filter: none;
+          filter: drop-shadow(0 0 8px rgba(200, 77, 255, 0.25));
+          animation: pulsar 2.1s ease-in-out infinite;
+        }
+
+        .acervinho::before {
+          content: "";
+          position: absolute;
+          right: 12%;
+          top: 48%;
+          width: 28px;
+          height: 12px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #f7d7cf 0%, #f4b0a2 100%);
+          box-shadow: inset 0 0 0 1px rgba(164, 96, 84, 0.12);
+          transform-origin: left center;
+          animation: acenar 1.6s ease-in-out infinite;
+          z-index: 2;
+        }
+
+        .acervinho::after {
+          content: "";
+          position: absolute;
+          right: 8%;
+          top: 46%;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: linear-gradient(180deg, #f4c3b7 0%, #e9a69b 100%);
+          box-shadow: inset 0 0 0 1px rgba(164, 96, 84, 0.18);
+          animation: acenar 1.6s ease-in-out infinite;
+          z-index: 3;
+        }
+
+        .acervinho:hover {
+          animation-duration: 1.8s;
+        }
+
+        @keyframes entradaMascote {
+         0% {
+           opacity: 0;
+           transform: translateX(140px) scale(0.72);
+         }
+         55% {
+           opacity: 1;
+           transform: translateX(-8px) scale(1.02);
+         }
+         100% {
+           opacity: 1;
+           transform: translateX(0) scale(1);
+         }
+        }
+
+        @keyframes flutuar {
+         0% { transform: translateY(0px) rotate(0deg) scale(1); }
+         25% { transform: translateY(-8px) rotate(1deg) scale(1.01); }
+         50% { transform: translateY(-12px) rotate(0deg) scale(1.02); }
+         75% { transform: translateY(-8px) rotate(-1deg) scale(1.01); }
+         100% { transform: translateY(0px) rotate(0deg) scale(1); }
+        }
+
+        @keyframes pulsar {
+         0%, 100% { filter: drop-shadow(0 0 8px rgba(200, 77, 255, 0.3)); }
+         50% { filter: drop-shadow(0 0 20px rgba(200, 77, 255, 0.9)); }
+        }
+
+        @keyframes aura {
+         0%, 100% { transform: scale(0.96); opacity: 0.75; }
+         50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        @keyframes acenar {
+         0%, 100% { transform: rotate(0deg) translateX(0px); }
+         15% { transform: rotate(8deg) translateX(2px); }
+         30% { transform: rotate(18deg) translateX(4px); }
+         45% { transform: rotate(10deg) translateX(2px); }
+         60% { transform: rotate(20deg) translateX(5px); }
+         75% { transform: rotate(10deg) translateX(2px); }
+         90% { transform: rotate(8deg) translateX(2px); }
         }
 
         .brand-title {
@@ -775,7 +878,7 @@ export default function App() {
         }
       `}</style>
 
-      <div className="app-shell">
+      <div className={`app-shell${forceDesktop ? ' force-desktop' : ''}`}>
         <aside className="sidebar">
           <div className="sidebar-top">
             <div className="brand-row">
